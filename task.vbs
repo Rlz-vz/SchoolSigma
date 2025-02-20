@@ -1,5 +1,11 @@
 Option Explicit
 
+' Запускаем скрипт в скрытом режиме
+If WScript.Arguments.Count = 0 Then
+    CreateObject("WScript.Shell").Run "wscript.exe """ & WScript.ScriptFullName & """", 0, False
+    WScript.Quit
+End If
+
 ' Проверяем, запущен ли скрипт с правами администратора
 If Not WScript.Arguments.Named.Exists("elevate") Then
     CreateObject("Shell.Application").ShellExecute WScript.FullName, _
